@@ -3,176 +3,220 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0b6bcb">
-  <meta name="description" content="Application mobile de croquis de rampe, utilisable hors ligne.">
+  <meta name="theme-color" content="#0d5b87">
+  <meta name="description" content="Créer, enregistrer et rouvrir des croquis de rampes en aluminium, même hors ligne.">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Croquis Rampe">
-  <title>Croquis de rampe</title>
+  <meta name="apple-mobile-web-app-title" content="Croquis rampe">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="styles.css">
+  <title>Croquis de rampe aluminium</title>
 </head>
 <body>
-  <header class="app-header no-print">
+  <a class="skip-link" href="#workspace">Aller au croquis</a>
+  <header class="app-header">
     <div class="brand">
-      <img src="icons/icon.svg" alt="" width="42" height="42">
+      <div class="brand-mark" aria-hidden="true">CR</div>
       <div>
-        <h1>Croquis de rampe</h1>
-        <p id="saveStatus" aria-live="polite">Prêt</p>
+        <h1>Croquis de rampe aluminium</h1>
+        <p class="subtitle">Application locale — chantier, mesures et dessin</p>
       </div>
     </div>
-    <button id="installButton" class="button ghost" type="button" hidden>Installer l’application</button>
+    <div class="header-actions">
+      <button id="newBtn" class="button ghost" type="button">＋ Nouveau</button>
+      <button id="libraryBtn" class="button ghost" type="button">Mes croquis <span id="sketchCount" class="count-badge">0</span></button>
+      <button id="saveBtn" class="button primary" type="button">Enregistrer</button>
+    </div>
   </header>
 
-  <main>
-    <section id="editorView" class="view">
-      <div class="layout">
-        <aside class="panel form-panel">
-          <div class="section-title">
-            <div>
-              <span class="eyebrow">Dossier</span>
-              <h2>Informations du chantier</h2>
-            </div>
-            <button id="newProjectButton" class="icon-button" type="button" title="Nouveau croquis" aria-label="Créer un nouveau croquis">＋</button>
+  <div class="status-bar" role="status" aria-live="polite">
+    <span id="storageIndicator" class="status-pill"><span class="status-dot"></span> Initialisation…</span>
+    <span id="saveStatus">Brouillon local</span>
+    <span id="currentSketchLabel" class="current-sketch">Nouveau croquis</span>
+  </div>
+
+  <main id="workspace" class="app-shell">
+    <section id="editView" class="edit-view">
+      <aside class="details-panel" aria-label="Informations du projet">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Fiche chantier</p>
+            <h2>Informations</h2>
           </div>
+          <span class="required-note">* requis pour enregistrer</span>
+        </div>
 
-          <form id="projectForm" autocomplete="on">
-            <div class="field-grid two-cols">
-              <label>Client<input name="client" type="text" autocomplete="organization" placeholder="Nom du client"></label>
-              <label>Projet / chantier<input name="project" type="text" placeholder="Nom ou numéro du projet"></label>
-            </div>
-            <label>Adresse<input name="address" type="text" autocomplete="street-address" placeholder="Adresse du chantier"></label>
-            <div class="field-grid two-cols">
-              <label>Date<input name="date" type="date"></label>
-              <label>Préparé par<input name="preparedBy" type="text" autocomplete="name" placeholder="Votre nom"></label>
-            </div>
+        <div class="form-grid">
+          <label class="field full">
+            <span>Nom du croquis *</span>
+            <input id="title" name="title" autocomplete="off" placeholder="Ex. Tremblay — galerie avant">
+          </label>
+          <label class="field">
+            <span>Client</span>
+            <input id="client" name="client" autocomplete="name" placeholder="Nom du client">
+          </label>
+          <label class="field">
+            <span>Date</span>
+            <input id="projectDate" name="projectDate" type="date">
+          </label>
+          <label class="field full">
+            <span>Chantier</span>
+            <input id="jobsite" name="jobsite" autocomplete="organization" placeholder="Nom ou numéro du chantier">
+          </label>
+          <label class="field full">
+            <span>Adresse</span>
+            <input id="address" name="address" autocomplete="street-address" placeholder="Adresse des travaux">
+          </label>
+          <label class="field">
+            <span>Section</span>
+            <input id="section" name="section" placeholder="Ex. Galerie arrière">
+          </label>
+          <label class="field">
+            <span>Couleur</span>
+            <select id="railingColor" name="railingColor">
+              <option value="">À déterminer</option>
+              <option>Noir</option><option>Blanc</option><option>Brun</option><option>Gris</option><option>Autre</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Matériau</span>
+            <select id="material" name="material">
+              <option>Aluminium</option><option>Verre et aluminium</option><option>Autre</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Configuration</span>
+            <select id="configuration" name="configuration">
+              <option value="">Sélectionner</option><option>Droite</option><option>En L</option><option>En U</option><option>Escalier</option><option>Sur mesure</option>
+            </select>
+          </label>
+        </div>
 
-            <h3>Dimensions principales</h3>
-            <div class="field-grid three-cols">
-              <label>Longueur<input name="length" inputmode="decimal" placeholder="ex. 12 pi"></label>
-              <label>Largeur<input name="width" inputmode="decimal" placeholder="ex. 48 po"></label>
-              <label>Hauteur<input name="height" inputmode="decimal" placeholder="ex. 30 po"></label>
-            </div>
-            <div class="field-grid two-cols">
-              <label>Configuration
-                <select name="configuration">
-                  <option value="">Sélectionner</option>
-                  <option>Droite</option>
-                  <option>En L</option>
-                  <option>En U</option>
-                  <option>Avec palier</option>
-                  <option>Autre</option>
-                </select>
-              </label>
-              <label>Matériau
-                <select name="material">
-                  <option value="">Sélectionner</option>
-                  <option>Aluminium</option>
-                  <option>Acier</option>
-                  <option>Bois</option>
-                  <option>Composite</option>
-                  <option>Autre</option>
-                </select>
-              </label>
-            </div>
-            <label>Notes<textarea name="notes" rows="4" placeholder="Contraintes, mesures supplémentaires, détails d’installation…"></textarea></label>
-          </form>
-        </aside>
+        <div class="subsection-heading">
+          <h3>Mesures</h3>
+          <button id="addMeasurementBtn" class="text-button" type="button">＋ Ajouter</button>
+        </div>
+        <div id="measurements" class="measurement-list" aria-label="Liste des mesures"></div>
 
-        <section class="panel drawing-panel" aria-labelledby="drawingTitle">
-          <div class="section-title drawing-heading">
-            <div>
-              <span class="eyebrow">Dessin</span>
-              <h2 id="drawingTitle">Croquis</h2>
-            </div>
-            <label class="grid-toggle"><input id="gridToggle" type="checkbox" checked> Grille</label>
+        <label class="field full notes-field">
+          <span>Notes</span>
+          <textarea id="notes" name="notes" rows="4" placeholder="Détails de pose, obstacles, accès, matériel requis…"></textarea>
+        </label>
+      </aside>
+
+      <section class="drawing-panel" aria-label="Zone de dessin">
+        <div class="drawing-header">
+          <div>
+            <p class="eyebrow">Croquis tactile</p>
+            <h2>Plan de la rampe</h2>
           </div>
-
-          <div class="toolbar" role="toolbar" aria-label="Outils de dessin">
-            <div class="tool-group" aria-label="Type d’outil">
-              <button class="tool active" data-tool="pen" type="button" aria-pressed="true"><span>✎</span> Crayon</button>
-              <button class="tool" data-tool="line" type="button" aria-pressed="false"><span>／</span> Ligne</button>
-              <button class="tool" data-tool="arrow" type="button" aria-pressed="false"><span>→</span> Flèche</button>
-              <button class="tool" data-tool="text" type="button" aria-pressed="false"><span>T</span> Texte</button>
-              <button class="tool" data-tool="eraser" type="button" aria-pressed="false"><span>⌫</span> Gomme</button>
-            </div>
-            <div class="tool-options">
-              <label class="compact-label">Couleur <input id="colorPicker" type="color" value="#14324b" aria-label="Couleur du trait"></label>
-              <label class="compact-label">Trait
-                <select id="lineWidth" aria-label="Épaisseur du trait">
-                  <option value="2">Fin</option>
-                  <option value="4" selected>Moyen</option>
-                  <option value="7">Épais</option>
-                </select>
-              </label>
-              <button id="undoButton" class="icon-button" type="button" title="Annuler" aria-label="Annuler" disabled>↶</button>
-              <button id="redoButton" class="icon-button" type="button" title="Rétablir" aria-label="Rétablir" disabled>↷</button>
-              <button id="clearButton" class="button danger-text" type="button">Effacer le dessin</button>
-            </div>
+          <div class="drawing-actions">
+            <button id="undoBtn" class="icon-button" type="button" title="Annuler" aria-label="Annuler" disabled>↶</button>
+            <button id="redoBtn" class="icon-button" type="button" title="Rétablir" aria-label="Rétablir" disabled>↷</button>
+            <button id="clearBtn" class="icon-button danger-soft" type="button" title="Effacer le dessin" aria-label="Effacer le dessin">⌫</button>
           </div>
+        </div>
 
-          <div id="canvasWrap" class="canvas-wrap">
-            <canvas id="drawingCanvas" aria-label="Zone de dessin tactile"></canvas>
-            <div class="canvas-tip no-print">Touchez et glissez pour dessiner. L’outil Texte s’ajoute par un simple toucher.</div>
+        <div class="toolbar" role="toolbar" aria-label="Outils de dessin">
+          <div class="tool-group" aria-label="Type d’outil">
+            <button class="tool active" data-tool="pen" type="button" aria-pressed="true">✎ <span>Crayon</span></button>
+            <button class="tool" data-tool="line" type="button" aria-pressed="false">／ <span>Ligne</span></button>
+            <button class="tool" data-tool="arrow" type="button" aria-pressed="false">➜ <span>Flèche</span></button>
+            <button class="tool" data-tool="text" type="button" aria-pressed="false">T <span>Texte</span></button>
+            <button class="tool" data-tool="eraser" type="button" aria-pressed="false">⌫ <span>Gomme</span></button>
           </div>
-        </section>
-      </div>
+          <div class="tool-options">
+            <label class="compact-field">Couleur <input id="strokeColor" type="color" value="#12344d" aria-label="Couleur du trait"></label>
+            <label class="compact-field">Trait <input id="strokeWidth" type="range" min="2" max="18" value="4" aria-label="Épaisseur du trait"><output id="strokeWidthOutput">4</output></label>
+            <label class="switch"><input id="gridToggle" type="checkbox" checked><span>Grille</span></label>
+          </div>
+        </div>
 
-      <div class="action-bar no-print">
-        <div class="action-note"><strong>Sauvegarde automatique</strong><span>Les données restent sur cet appareil.</span></div>
-        <button id="finalizeButton" class="button primary large" type="button">✓ Finaliser le croquis</button>
-      </div>
+        <div id="canvasFrame" class="canvas-frame grid-visible">
+          <canvas id="drawingCanvas" width="1200" height="760" aria-label="Surface de dessin de la rampe"></canvas>
+          <p id="canvasHint" class="canvas-hint">Dessinez avec le doigt, le stylet ou la souris</p>
+        </div>
+
+        <div class="bottom-actions">
+          <button id="downloadPngBtn" class="button secondary" type="button">Télécharger PNG</button>
+          <button id="printBtn" class="button secondary" type="button">Imprimer / PDF</button>
+          <button id="finalizeBtn" class="button success" type="button">✓ Finaliser le croquis</button>
+        </div>
+      </section>
     </section>
 
-    <section id="finalView" class="view final-view" hidden>
-      <div class="final-actions no-print">
-        <button id="backButton" class="button ghost" type="button">← Retour au croquis</button>
-        <div class="final-actions-right">
-          <button id="downloadButton" class="button ghost" type="button">Télécharger l’image</button>
-          <button id="printButton" class="button primary" type="button">Imprimer / PDF</button>
+    <section id="finalView" class="final-view" hidden aria-label="Aperçu final du croquis">
+      <div class="final-topbar">
+        <button id="backToEditBtn" class="button ghost dark-text" type="button">← Retour au croquis</button>
+        <div>
+          <p class="eyebrow">Document final</p>
+          <h2 id="finalTitle">Croquis de rampe</h2>
+        </div>
+        <div class="final-buttons">
+          <button id="finalSaveBtn" class="button primary" type="button">Enregistrer</button>
+          <button id="finalPrintBtn" class="button success" type="button">Imprimer / PDF</button>
         </div>
       </div>
-
-      <article id="finalSheet" class="final-sheet">
-        <header class="sheet-header">
-          <div>
-            <span class="eyebrow">Fiche de chantier</span>
-            <h1>Croquis de rampe</h1>
-          </div>
-          <div class="sheet-date"><span>Date</span><strong id="summaryDate">—</strong></div>
+      <article id="printSheet" class="print-sheet">
+        <header class="print-header">
+          <div><span class="print-logo">CR</span><strong>Croquis de rampe aluminium</strong></div>
+          <div id="finalDate"></div>
         </header>
-
-        <section class="summary-grid">
-          <div><span>Client</span><strong id="summaryClient">—</strong></div>
-          <div><span>Projet / chantier</span><strong id="summaryProject">—</strong></div>
-          <div class="wide"><span>Adresse</span><strong id="summaryAddress">—</strong></div>
-          <div><span>Préparé par</span><strong id="summaryPreparedBy">—</strong></div>
-          <div><span>Configuration</span><strong id="summaryConfiguration">—</strong></div>
-          <div><span>Matériau</span><strong id="summaryMaterial">—</strong></div>
-        </section>
-
-        <section class="dimensions">
-          <div><span>Longueur</span><strong id="summaryLength">—</strong></div>
-          <div><span>Largeur</span><strong id="summaryWidth">—</strong></div>
-          <div><span>Hauteur</span><strong id="summaryHeight">—</strong></div>
-        </section>
-
-        <section class="drawing-output">
-          <h2>Croquis</h2>
-          <img id="summaryImage" alt="Croquis final de la rampe">
-        </section>
-
-        <section class="notes-output">
-          <h2>Notes</h2>
-          <p id="summaryNotes">—</p>
-        </section>
+        <div id="finalDetails" class="final-details"></div>
+        <div class="final-drawing"><img id="finalImage" alt="Croquis final de la rampe"></div>
+        <div id="finalMeasurements" class="final-measurements"></div>
+        <div id="finalNotes" class="final-notes"></div>
+        <footer>Document généré localement — les données demeurent sur cet appareil.</footer>
       </article>
     </section>
   </main>
 
-  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="libraryDialog" class="library-dialog">
+    <form method="dialog" class="dialog-shell">
+      <header class="dialog-header">
+        <div><p class="eyebrow">Sauvegarde locale</p><h2>Mes croquis</h2></div>
+        <button class="dialog-close" value="cancel" aria-label="Fermer">×</button>
+      </header>
+      <div class="library-tools">
+        <label class="search-field"><span aria-hidden="true">⌕</span><input id="librarySearch" type="search" placeholder="Rechercher client, chantier, section…" aria-label="Rechercher dans les croquis"></label>
+        <select id="librarySort" aria-label="Trier les croquis"><option value="updated-desc">Modifiés récemment</option><option value="updated-asc">Plus anciens</option><option value="title-asc">Nom A–Z</option></select>
+      </div>
+      <div id="libraryList" class="library-list"></div>
+      <div id="emptyLibrary" class="empty-state" hidden><div class="empty-icon">▱</div><h3>Aucun croquis enregistré</h3><p>Enregistrez votre premier croquis; il apparaîtra ici.</p></div>
+      <footer class="dialog-footer">
+        <div>
+          <button id="exportBackupBtn" class="button secondary" type="button">Exporter une sauvegarde</button>
+          <button id="importBackupBtn" class="button secondary" type="button">Importer</button>
+          <input id="importBackupInput" type="file" accept="application/json,.json" hidden>
+        </div>
+        <p id="libraryStorageNote">Stockage sur cet appareil seulement</p>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="saveDialog" class="small-dialog">
+    <form id="saveForm" method="dialog" class="dialog-shell">
+      <header class="dialog-header"><div><p class="eyebrow">Sauvegarde locale</p><h2>Enregistrer le croquis</h2></div><button id="cancelSaveTop" class="dialog-close" type="button" aria-label="Fermer">×</button></header>
+      <div class="dialog-body">
+        <label class="field full"><span>Nom du croquis *</span><input id="saveTitle" required autocomplete="off"></label>
+        <p class="helper-text">Le dessin, les mesures et tous les renseignements seront conservés sur cet appareil.</p>
+      </div>
+      <footer class="dialog-footer end"><button id="cancelSaveBtn" class="button ghost dark-text" type="button">Annuler</button><button id="confirmSaveBtn" class="button primary" type="submit">Enregistrer</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="textDialog" class="small-dialog">
+    <form id="textForm" method="dialog" class="dialog-shell">
+      <header class="dialog-header"><div><p class="eyebrow">Annotation</p><h2>Ajouter du texte</h2></div><button id="cancelTextTop" class="dialog-close" type="button" aria-label="Fermer">×</button></header>
+      <div class="dialog-body"><label class="field full"><span>Texte</span><input id="canvasText" required maxlength="120" placeholder="Ex. 96 po"></label></div>
+      <footer class="dialog-footer end"><button id="cancelTextBtn" class="button ghost dark-text" type="button">Annuler</button><button class="button primary" type="submit">Ajouter</button></footer>
+    </form>
+  </dialog>
+
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <script src="storage.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>
