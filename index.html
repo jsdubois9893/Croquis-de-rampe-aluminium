@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b6bcb">
+  <meta name="description" content="Application mobile de croquis de rampe, utilisable hors ligne.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Croquis Rampe">
+  <title>Croquis de rampe</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header no-print">
+    <div class="brand">
+      <img src="icons/icon.svg" alt="" width="42" height="42">
+      <div>
+        <h1>Croquis de rampe</h1>
+        <p id="saveStatus" aria-live="polite">Prêt</p>
+      </div>
+    </div>
+    <button id="installButton" class="button ghost" type="button" hidden>Installer l’application</button>
+  </header>
+
+  <main>
+    <section id="editorView" class="view">
+      <div class="layout">
+        <aside class="panel form-panel">
+          <div class="section-title">
+            <div>
+              <span class="eyebrow">Dossier</span>
+              <h2>Informations du chantier</h2>
+            </div>
+            <button id="newProjectButton" class="icon-button" type="button" title="Nouveau croquis" aria-label="Créer un nouveau croquis">＋</button>
+          </div>
+
+          <form id="projectForm" autocomplete="on">
+            <div class="field-grid two-cols">
+              <label>Client<input name="client" type="text" autocomplete="organization" placeholder="Nom du client"></label>
+              <label>Projet / chantier<input name="project" type="text" placeholder="Nom ou numéro du projet"></label>
+            </div>
+            <label>Adresse<input name="address" type="text" autocomplete="street-address" placeholder="Adresse du chantier"></label>
+            <div class="field-grid two-cols">
+              <label>Date<input name="date" type="date"></label>
+              <label>Préparé par<input name="preparedBy" type="text" autocomplete="name" placeholder="Votre nom"></label>
+            </div>
+
+            <h3>Dimensions principales</h3>
+            <div class="field-grid three-cols">
+              <label>Longueur<input name="length" inputmode="decimal" placeholder="ex. 12 pi"></label>
+              <label>Largeur<input name="width" inputmode="decimal" placeholder="ex. 48 po"></label>
+              <label>Hauteur<input name="height" inputmode="decimal" placeholder="ex. 30 po"></label>
+            </div>
+            <div class="field-grid two-cols">
+              <label>Configuration
+                <select name="configuration">
+                  <option value="">Sélectionner</option>
+                  <option>Droite</option>
+                  <option>En L</option>
+                  <option>En U</option>
+                  <option>Avec palier</option>
+                  <option>Autre</option>
+                </select>
+              </label>
+              <label>Matériau
+                <select name="material">
+                  <option value="">Sélectionner</option>
+                  <option>Aluminium</option>
+                  <option>Acier</option>
+                  <option>Bois</option>
+                  <option>Composite</option>
+                  <option>Autre</option>
+                </select>
+              </label>
+            </div>
+            <label>Notes<textarea name="notes" rows="4" placeholder="Contraintes, mesures supplémentaires, détails d’installation…"></textarea></label>
+          </form>
+        </aside>
+
+        <section class="panel drawing-panel" aria-labelledby="drawingTitle">
+          <div class="section-title drawing-heading">
+            <div>
+              <span class="eyebrow">Dessin</span>
+              <h2 id="drawingTitle">Croquis</h2>
+            </div>
+            <label class="grid-toggle"><input id="gridToggle" type="checkbox" checked> Grille</label>
+          </div>
+
+          <div class="toolbar" role="toolbar" aria-label="Outils de dessin">
+            <div class="tool-group" aria-label="Type d’outil">
+              <button class="tool active" data-tool="pen" type="button" aria-pressed="true"><span>✎</span> Crayon</button>
+              <button class="tool" data-tool="line" type="button" aria-pressed="false"><span>／</span> Ligne</button>
+              <button class="tool" data-tool="arrow" type="button" aria-pressed="false"><span>→</span> Flèche</button>
+              <button class="tool" data-tool="text" type="button" aria-pressed="false"><span>T</span> Texte</button>
+              <button class="tool" data-tool="eraser" type="button" aria-pressed="false"><span>⌫</span> Gomme</button>
+            </div>
+            <div class="tool-options">
+              <label class="compact-label">Couleur <input id="colorPicker" type="color" value="#14324b" aria-label="Couleur du trait"></label>
+              <label class="compact-label">Trait
+                <select id="lineWidth" aria-label="Épaisseur du trait">
+                  <option value="2">Fin</option>
+                  <option value="4" selected>Moyen</option>
+                  <option value="7">Épais</option>
+                </select>
+              </label>
+              <button id="undoButton" class="icon-button" type="button" title="Annuler" aria-label="Annuler" disabled>↶</button>
+              <button id="redoButton" class="icon-button" type="button" title="Rétablir" aria-label="Rétablir" disabled>↷</button>
+              <button id="clearButton" class="button danger-text" type="button">Effacer le dessin</button>
+            </div>
+          </div>
+
+          <div id="canvasWrap" class="canvas-wrap">
+            <canvas id="drawingCanvas" aria-label="Zone de dessin tactile"></canvas>
+            <div class="canvas-tip no-print">Touchez et glissez pour dessiner. L’outil Texte s’ajoute par un simple toucher.</div>
+          </div>
+        </section>
+      </div>
+
+      <div class="action-bar no-print">
+        <div class="action-note"><strong>Sauvegarde automatique</strong><span>Les données restent sur cet appareil.</span></div>
+        <button id="finalizeButton" class="button primary large" type="button">✓ Finaliser le croquis</button>
+      </div>
+    </section>
+
+    <section id="finalView" class="view final-view" hidden>
+      <div class="final-actions no-print">
+        <button id="backButton" class="button ghost" type="button">← Retour au croquis</button>
+        <div class="final-actions-right">
+          <button id="downloadButton" class="button ghost" type="button">Télécharger l’image</button>
+          <button id="printButton" class="button primary" type="button">Imprimer / PDF</button>
+        </div>
+      </div>
+
+      <article id="finalSheet" class="final-sheet">
+        <header class="sheet-header">
+          <div>
+            <span class="eyebrow">Fiche de chantier</span>
+            <h1>Croquis de rampe</h1>
+          </div>
+          <div class="sheet-date"><span>Date</span><strong id="summaryDate">—</strong></div>
+        </header>
+
+        <section class="summary-grid">
+          <div><span>Client</span><strong id="summaryClient">—</strong></div>
+          <div><span>Projet / chantier</span><strong id="summaryProject">—</strong></div>
+          <div class="wide"><span>Adresse</span><strong id="summaryAddress">—</strong></div>
+          <div><span>Préparé par</span><strong id="summaryPreparedBy">—</strong></div>
+          <div><span>Configuration</span><strong id="summaryConfiguration">—</strong></div>
+          <div><span>Matériau</span><strong id="summaryMaterial">—</strong></div>
+        </section>
+
+        <section class="dimensions">
+          <div><span>Longueur</span><strong id="summaryLength">—</strong></div>
+          <div><span>Largeur</span><strong id="summaryWidth">—</strong></div>
+          <div><span>Hauteur</span><strong id="summaryHeight">—</strong></div>
+        </section>
+
+        <section class="drawing-output">
+          <h2>Croquis</h2>
+          <img id="summaryImage" alt="Croquis final de la rampe">
+        </section>
+
+        <section class="notes-output">
+          <h2>Notes</h2>
+          <p id="summaryNotes">—</p>
+        </section>
+      </article>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script src="app.js" defer></script>
+</body>
+</html>
